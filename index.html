@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Notion AIクレジット移行ガイド</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap">
+<style>
+  /* レイアウト：社内報の1記事。見出し→言葉の説明→変わること→あなたへの影響、を1段組みで読み下ろす */
+  :root {
+    --bg: #FBFAF6;
+    --ink: #1A1E1D;
+    --mute: #5C6663;
+    --line: #DCDFD9;
+    --brand: #0D2623;
+    --gold-ink: #6B5F1E;
+    --tint: #F1EFE3;
+    --date: #B5493A;
+    --sel: #3E6B5E;
+    color-scheme: light;
+    --f-head: "Noto Serif JP", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --f-body: "Noto Sans JP", "Hiragino Sans", "Yu Gothic UI", Meiryo, sans-serif;
+  }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 16px;
+    line-height: 1.8;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    padding-block: 40px 64px;
+  }
+  .article { max-width: 640px; margin: 0 auto; display: flex; flex-direction: column; gap: 32px; }
+
+  .masthead { display: flex; flex-wrap: wrap; gap: 6px 14px; padding-bottom: 12px; border-bottom: 2px solid var(--brand); font-size: 13px; color: var(--mute); }
+  .masthead .kind { font-weight: 700; color: var(--brand); letter-spacing: .08em; }
+
+  header { display: flex; flex-direction: column; gap: 14px; }
+  h1 { font-family: var(--f-head); font-size: clamp(24px, 5vw, 30px); line-height: 1.45; margin: 0; text-wrap: balance; }
+  .lead { margin: 0; }
+  .date { color: var(--date); font-weight: 700; white-space: nowrap; }
+
+  .words { background: var(--tint); border-radius: 6px; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+  .words h2 { font-family: var(--f-body); font-size: 13px; letter-spacing: .1em; color: var(--gold-ink); margin: 0; }
+  .words dl { margin: 0; display: grid; grid-template-columns: max-content 1fr; gap: 6px 16px; }
+  .words dt { font-weight: 700; }
+  .words dd { margin: 0; min-width: 0; }
+
+  section { display: flex; flex-direction: column; gap: 12px; }
+  h2 { font-family: var(--f-head); font-size: 21px; line-height: 1.5; margin: 0; text-wrap: balance; }
+  p { margin: 0; }
+  h3 { font-size: 16px; margin: 12px 0 0; }
+
+  .changes { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+  .changes li { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 12px 0; border-top: 1px solid var(--line); }
+  .changes li:last-child { border-bottom: 1px solid var(--line); }
+  .changes b { font-size: 16px; }
+  .changes span.what { grid-column: 1 / -1; color: var(--mute); font-size: 15px; }
+  .when { font-size: 12px; font-weight: 500; padding: 1px 8px; border-radius: 3px; border: 1px solid var(--line); color: var(--mute); white-space: nowrap; align-self: center; }
+  .when.now { border-color: var(--brand); color: var(--brand); }
+  .when.date-tag { border-color: var(--date); color: var(--date); }
+
+  .wallets { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .wallet { border: 2px solid var(--brand); border-radius: 8px; padding: 16px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .wallet.sel { border-color: var(--sel); }
+  .wallet .name { font-weight: 700; }
+  .wallet .amt { font-size: 32px; font-weight: 700; line-height: 1; color: var(--brand); font-variant-numeric: tabular-nums; }
+  .wallet.sel .amt { color: var(--sel); }
+  .wallet .amt small { font-size: 13px; font-weight: 500; color: var(--mute); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: 13px; padding: 2px 10px; border-radius: 12px; background: var(--tint); }
+  .wallet .use { font-size: 14px; color: var(--mute); border-top: 1px solid var(--line); padding-top: 8px; margin-top: auto; }
+  .table-wrap { overflow-x: auto; }
+  table { border-collapse: collapse; width: 100%; font-size: 15px; }
+  th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-size: 13px; color: var(--mute); font-weight: 500; border-bottom: 2px solid var(--brand); white-space: nowrap; }
+  td.num { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+
+  .checklist { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px; }
+  .checklist li { display: grid; grid-template-columns: 22px 1fr; gap: 8px; }
+  .checklist li::before { content: ""; width: 14px; height: 14px; border: 1.5px solid var(--brand); border-radius: 3px; margin-top: 6px; }
+
+  footer { border-top: 1px solid var(--line); padding-top: 16px; font-size: 13px; color: var(--mute); }
+  a { color: var(--brand); text-underline-offset: 3px; }
+  a:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<main class="article">
+  <div class="masthead">
+    <span class="kind">社内ニュース</span>
+    <span>情シスチーム</span>
+    <span>2026年10月20日</span>
+  </div>
+
+  <header>
+    <h1>Notion AIが新しくなり、11月2日からAIの使用量の数え方が変わります</h1>
+    <p class="lead">Notionが10月19日に発表しました。ふだんの使い方なら、<span class="date">11月2日</span>以降も困ることはほぼありません。</p>
+  </header>
+
+  <aside class="words" aria-label="この記事の言葉">
+    <h2>この記事の言葉</h2>
+    <dl>
+      <dt>クレジット</dt><dd>AIを使うたびに減るポイント。毎月もらえる</dd>
+      <dt>エージェント</dt><dd>作業を任せられるNotionのAI</dd>
+      <dt>Auto</dt><dd>AIの種類（モデル）をNotionが自動で選ぶ設定</dd>
+    </dl>
+  </aside>
+
+  <section>
+    <h2>変わること</h2>
+    <ul class="changes">
+      <li><b>AIに長い作業を任せられる</b><span class="when now">今日から使える</span><span class="what">これまで5分で止まっていた作業が、24時間以上続けられる</span></li>
+      <li><b>AIの種類を自動で選び、安く済む</b><span class="when now">今日から使える</span><span class="what">Autoにすると、同じくらいの結果を約1割のクレジットで出せる（Notionの試算）</span></li>
+      <li><b>ChatGPTの個人契約をつなげる</b><span class="when now">今日から使える</span><span class="what">つなぐと、Notionのクレジットを使わずにAIを使える</span></li>
+      <li><b>ClaudeやChatGPTの記憶をNotionに残せる</b><span class="when now">今日から使える</span><span class="what">外のAIとNotionをつなぎ、覚えたことを同期できる</span></li>
+      <li><b>管理者がAIの使用量を確かめられる</b><span class="when">近日公開・日付は未定</span><span class="what">上限に近づくと通知が届き、上限も決められる</span></li>
+      <li><b>クレジットが2種類に分かれる</b><span class="when date-tag">11月2日から</span><span class="what">下の表のとおり</span></li>
+      <li><b>AIミーティングノートもクレジットを使う</b><span class="when date-tag">12月1日から</span><span class="what">Standardを使う。1時間の会議で約10クレジット</span></li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>あなたへの影響</h2>
+    <p>11月2日から、1人あたり毎月2種類のクレジットを持ちます。人に譲ることも、翌月に繰り越すこともできません。</p>
+    <div class="wallets" role="group" aria-label="2種類のクレジット">
+      <div class="wallet">
+        <span class="name">Standard</span>
+        <span class="amt">1,500<small> /月</small></span>
+        <div class="chips"><span class="chip">AIへの質問</span><span class="chip">文章作成・翻訳</span><span class="chip">AIブロック</span><span class="chip">議事録（12月から）</span></div>
+        <p class="use">ふだんの作業は、この範囲で足りる</p>
+      </div>
+      <div class="wallet sel">
+        <span class="name">Select</span>
+        <span class="amt">500<small> /月</small></span>
+        <div class="chips"><span class="chip">AIの種類を自分で選ぶ</span><span class="chip">自分で作ったエージェント</span></div>
+        <p class="use">エージェントは、この範囲で自由に動かしてよい</p>
+      </div>
+    </div>
+
+    <h3>1,500クレジットでできることの目安</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>作業</th><th>1回あたり</th><th>1,500でできる回数</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>メールの推敲、文書の翻訳</td><td class="num">約5</td><td class="num">約300回</td></tr>
+          <tr><td>報告書の作成、社内の文書探し</td><td class="num">約10</td><td class="num">約150回</td></tr>
+          <tr><td>1時間の会議の議事録（AIミーティングノート）</td><td class="num">約10</td><td class="num">約150時間</td></tr>
+          <tr><td>計画書の推敲、データベースの作成</td><td class="num">約25</td><td class="num">約60回</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>毎日、1時間の会議を2つ記録し、メールの推敲を5回しても、1か月（20日）で約900です。数字はAutoで使った場合のNotionの試算で、長い文書では増えます。</p>
+
+    <h3>気をつけること</h3>
+    <ul class="checklist">
+      <li><span>AIの種類を自分で選ぶと、Autoの6〜10倍ほど減る（Opus 5.5の場合）。必要なときだけにする</span></li>
+      <li><span>使い切ると、その種類の作業は翌月まで止まる。Selectが切れても、Autoに戻せばStandardで続けられる</span></li>
+      <li><span>残りは「設定」→「Notion AI」→「Usage」で確かめられる</span></li>
+    </ul>
+    <p>Business・Enterpriseプランの場合です。Notionは、ほとんどの人は使い切らないと見ています。</p>
+  </section>
+
+  <footer>
+    出典：<a href="https://www.notion.com/ja/blog/notion-ai-more-for-less" target="_blank" rel="noopener">Notion ブログ（日本語版、2026年10月19日）</a>、<a href="https://www.notion.com/help/manage-your-ai-credits" target="_blank" rel="noopener">Notion ヘルプ「Manage your AI credits」</a>
+  </footer>
+</main>
+</body>
+</html>
